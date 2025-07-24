@@ -10,6 +10,12 @@ import (
 	"example.com/generic-package-indexer/internal/parser"
 )
 
+const (
+	CommandResponseOk    = "OK\n"
+	CommandResponseFail  = "FAIL\n"
+	CommandResponseError = "ERROR\n"
+)
+
 func HandleConnection(conn net.Conn, idx *indexer.Indexer) {
 	defer conn.Close()
 
@@ -23,33 +29,41 @@ func HandleConnection(conn net.Conn, idx *indexer.Indexer) {
 		req, err := parser.Parse(line)
 		if err != nil {
 			log.Printf("[client %s] Failed to parse message: %v", remoteAddr, err)
-			return
+			if err := send(conn, CommandResponseError); err != nil {
+				return // Send failure, close connection
+			}
+			continue // Keep processing next lines
 		}
 
 		// Log parsed message for now...
 		log.Printf("[client %s] Parsed message: %s %s %s", remoteAddr, req.Command, req.Package, req.Dependencies)
 
+		var resp string
 		switch req.Command {
 		case parser.CommandIndex:
 			if idx.Index(req.Package, req.Dependencies) {
-				send(conn, "OK\n")
+				resp = CommandResponseOk
 			} else {
-				send(conn, "FAIL\n")
+				resp = CommandResponseFail
 			}
 		case parser.CommandRemove:
 			if idx.Remove(req.Package) {
-				send(conn, "OK\n")
+				resp = CommandResponseOk
 			} else {
-				send(conn, "FAIL\n")
+				resp = CommandResponseFail
 			}
 		case parser.CommandQuery:
 			if idx.Query(req.Package) {
-				send(conn, "OK\n")
+				resp = CommandResponseOk
 			} else {
-				send(conn, "FAIL\n")
+				resp = CommandResponseFail
 			}
 		default:
-			send(conn, "ERROR\n") // Unknown command (should not happen)
+			resp = CommandResponseError // Unknown command (should not happen)
+		}
+
+		if err := send(conn, resp); err != nil {
+			return // Send failure, close connection
 		}
 	}
 
@@ -58,10 +72,10 @@ func HandleConnection(conn net.Conn, idx *indexer.Indexer) {
 	}
 }
 
-func send(conn net.Conn, msg string) {
+func send(conn net.Conn, msg string) error {
 	_, err := fmt.Fprint(conn, msg)
 	if err != nil {
 		log.Printf("[client %s] Failed to send response: %v", conn.RemoteAddr(), err)
-		return
 	}
+	return err
 }
