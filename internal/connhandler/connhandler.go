@@ -62,6 +62,9 @@ func HandleConnection(conn net.Conn, idx *indexer.Indexer) {
 			resp = CommandResponseError // Unknown command (should not happen)
 		}
 
+		// Show how many packages have been indexed...
+		log.Printf("[server] %d packages indexed", idx.Count())
+
 		if err := send(conn, resp); err != nil {
 			return // Send failure, close connection
 		}
