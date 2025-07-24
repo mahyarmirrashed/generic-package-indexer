@@ -43,23 +43,30 @@ func HandleConnection(conn net.Conn, idx *indexer.Indexer) {
 		case parser.CommandIndex:
 			if idx.Index(req.Package, req.Dependencies) {
 				resp = CommandResponseOk
+				log.Printf("[client %s] INDEX succeeded for package %q with dependencies %v", remoteAddr, req.Package, req.Dependencies)
 			} else {
 				resp = CommandResponseFail
+				log.Printf("[client %s] INDEX failed for package %q due to missing dependencies %v", remoteAddr, req.Package, req.Dependencies)
 			}
 		case parser.CommandRemove:
 			if idx.Remove(req.Package) {
 				resp = CommandResponseOk
+				log.Printf("[client %s] REMOVE succeeded for package %q", remoteAddr, req.Package)
 			} else {
 				resp = CommandResponseFail
+				log.Printf("[client %s] REMOVE failed for package %q because other packages depend on it", remoteAddr, req.Package)
 			}
 		case parser.CommandQuery:
 			if idx.Query(req.Package) {
 				resp = CommandResponseOk
+				log.Printf("[client %s] QUERY found package %q", remoteAddr, req.Package)
 			} else {
 				resp = CommandResponseFail
+				log.Printf("[client %s] QUERY did not find package %q", remoteAddr, req.Package)
 			}
 		default:
 			resp = CommandResponseError // Unknown command (should not happen)
+			log.Printf("[client %s] Received unknown command %q", remoteAddr, req.Command)
 		}
 
 		// Show how many packages have been indexed...
