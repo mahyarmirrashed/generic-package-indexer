@@ -91,3 +91,15 @@ The final implementation uses the Goroutine-per-Connection with Mutex-Protected
 Shared State. I think this approach strikes a good balance between simplicity,
 performance, and idiomatic Go design. This approach passes the high-concurrency
 stress tests without excessive complexity or resource consumption.
+
+## Usage of LLMs
+
+I used a conservative amount of AI-generated code in this exercise.
+
+### Indexer
+
+I asked Perplexity's models to review my `indexer.go` file to make sure that I
+was not missing any edge cases. It correctly identified that my package indexer
+was not checking for cyclic dependencies when indexing a new package. This could
+create a deadlock where those packages could then never subsequently be removed.
+I then asked it to generate the relevant `hasCycle` method and associated tests.
