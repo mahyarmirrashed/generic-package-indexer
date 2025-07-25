@@ -6,17 +6,19 @@ import (
 )
 
 type Indexer struct {
-	mu                  sync.RWMutex
-	indexedPackages     map[string]struct{}
-	dependencies        map[string]map[string]struct{}
-	reverseDependencies map[string]map[string]struct{}
+	mu                    sync.RWMutex
+	indexedPackages       map[string]struct{}
+	dependencies          map[string]map[string]struct{}
+	reverseDependencies   map[string]map[string]struct{}
+	cycleDetectionEnabled bool
 }
 
 func New() *Indexer {
 	return &Indexer{
-		indexedPackages:     make(map[string]struct{}),
-		dependencies:        make(map[string]map[string]struct{}),
-		reverseDependencies: make(map[string]map[string]struct{}),
+		indexedPackages:       make(map[string]struct{}),
+		dependencies:          make(map[string]map[string]struct{}),
+		reverseDependencies:   make(map[string]map[string]struct{}),
+		cycleDetectionEnabled: false,
 	}
 }
 
@@ -41,7 +43,7 @@ func (idx *Indexer) Index(pkg string, deps []string) bool {
 	}
 
 	// Detect dependency cycle
-	if idx.hasCycle(pkg, deps) {
+	if idx.cycleDetectionEnabled && idx.hasCycle(pkg, deps) {
 		return false // Package with listed dependencies would create a cycle
 	}
 
@@ -111,6 +113,14 @@ func (idx *Indexer) Remove(pkg string) bool {
 	delete(idx.reverseDependencies, pkg)
 
 	return true
+}
+
+func (idx *Indexer) SetCycleDetection(enabled bool) {
+	// Acquire lock
+	idx.mu.RLock()
+	defer idx.mu.RUnlock()
+
+	idx.cycleDetectionEnabled = enabled
 }
 
 func (idx *Indexer) Query(pkg string) bool {
