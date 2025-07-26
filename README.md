@@ -23,7 +23,7 @@ go test -v ./...
 
 ## Design Discussions
 
-### Server Design Architecture Discusssion
+### Server Design Architecture Discussion
 
 The package indexer (server) is required to handle multiple simultaneous client
 connections, each performing package index operations; possibly in parallel. In
