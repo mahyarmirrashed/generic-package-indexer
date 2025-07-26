@@ -104,7 +104,7 @@ requires.
 | Dedicated State Goroutine        |     Medium     |      Yes      |     Medium      | Centralized bottleneck + added complexity |
 | Copy-on-Write Immutable State    |      Low       |      No       |   Medium-High   | High overhead + complex                   |
 
-#### → Chosen Design Architecture
+#### → Chosen Approach
 
 The final implementation uses the Goroutine-per-Connection with Mutex-Protected
 Shared State. I think this approach strikes a good balance between simplicity,
@@ -180,7 +180,7 @@ adjacency matrix, that's essentially our previous map-of-maps approach.
 | Bi-directional Maps |   Medium   |      Medium       | O(1) for deps and dependents | Excellent (direct lookup)    | High (two maps to sync)      |
 | Adjacency Matrix    |    Low     |        Low        | O(1) fixed-size matrix       | Good (indices direct)        | High (space + external deps) |
 
-#### → Chosen Design Architecture
+#### → Chosen Approach
 
 The final implementation uses the bi-directional maps approach. This data
 structure strikes a good balance between simplicity, performance, and
