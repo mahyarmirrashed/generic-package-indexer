@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net"
 	"os"
+	"strings"
 
 	"example.com/generic-package-indexer/internal/connhandler"
 	"example.com/generic-package-indexer/internal/indexer"
@@ -13,11 +14,12 @@ import (
 func main() {
 	addr := ":8080"
 
-	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelError})
-	logger := slog.New(handler)
-
+	verbosity := flag.String("verbosity", "error", "Log verbosity level: debug, info, warn, error")
 	detectCycles := flag.Bool("detect-cycles", false, "Detect dependency cycles in the indexer")
 	flag.Parse()
+
+	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: parseLogLevel(*verbosity)})
+	logger := slog.New(handler)
 
 	ln, err := net.Listen("tcp", addr)
 	if err != nil {
@@ -38,5 +40,20 @@ func main() {
 		}
 
 		go srv.HandleConnection(conn)
+	}
+}
+
+func parseLogLevel(level string) slog.Level {
+	switch strings.ToLower(level) {
+	case "debug":
+		return slog.LevelDebug
+	case "info":
+		return slog.LevelInfo
+	case "warn", "warning":
+		return slog.LevelWarn
+	case "error":
+		fallthrough
+	default:
+		return slog.LevelError
 	}
 }
