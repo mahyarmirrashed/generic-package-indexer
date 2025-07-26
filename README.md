@@ -176,11 +176,11 @@ adjacency matrix, that's essentially our previous map-of-maps approach.
 
 #### Summary Table
 
-| Pattern             | Simplicity | Memory Efficiency | Lookup Performance           | Removal Efficiency           | Implementation Complexity    |
-| ------------------- | :--------: | :---------------: | ---------------------------- | ---------------------------- | ---------------------------- |
-| Unidirectional Map  |    High    |       High        | O(1) for dependencies        | Very Poor (full scan needed) | Medium                       |
-| Bi-directional Maps |   Medium   |      Medium       | O(1) for deps and dependents | Excellent (direct lookup)    | High (two maps to sync)      |
-| Adjacency Matrix    |    Low     |        Low        | O(1) fixed-size matrix       | Good (indices direct)        | High (space + external deps) |
+| Pattern             | Simplicity | Memory Efficiency | Lookup Performance                    | Removal Efficiency           | Implementation Complexity    |
+| ------------------- | :--------: | :---------------: | ------------------------------------- | ---------------------------- | ---------------------------- |
+| Unidirectional Map  |    High    |       High        | $\text{O}(1)$ for dependencies        | Very Poor (full scan needed) | Medium                       |
+| Bi-directional Maps |   Medium   |      Medium       | $\text{O}(1)$ for deps and dependents | Excellent (direct lookup)    | High (two maps to sync)      |
+| Adjacency Matrix    |    Low     |        Low        | $\text{O}(1)$ fixed-size matrix       | Good (indices direct)        | High (space + external deps) |
 
 #### → Chosen Approach
 
