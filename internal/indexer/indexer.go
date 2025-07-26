@@ -1,6 +1,9 @@
 package indexer
 
-import "sync"
+import (
+	"slices"
+	"sync"
+)
 
 type Indexer struct {
 	mu                  sync.RWMutex
@@ -37,7 +40,10 @@ func (idx *Indexer) Index(pkg string, deps []string) bool {
 		}
 	}
 
-	// TODO: dependency cycle detection
+	// Detect dependency cycle
+	if idx.hasCycle(pkg, deps) {
+		return false // Package with listed dependencies would create a cycle
+	}
 
 	// Update old reverse dependencies (if they exist)
 	previousDeps, ok := idx.dependencies[pkg]
@@ -114,4 +120,36 @@ func (idx *Indexer) Query(pkg string) bool {
 
 	_, ok := idx.indexedPackages[pkg]
 	return ok
+}
+
+func (idx *Indexer) hasCycle(pkg string, deps []string) bool {
+	var visit func(node string) bool
+	visited := make(map[string]bool)
+
+	visit = func(node string) bool {
+		if visited[node] {
+			return node == pkg // If true, found a cycle
+		}
+		visited[node] = true
+
+		// List out children nodes to explore
+		var children []string
+		if node == pkg {
+			children = deps
+		} else if currentDeps, ok := idx.dependencies[node]; ok {
+			for dep := range currentDeps {
+				children = append(children, dep)
+			}
+		}
+
+		// If visit(child) returns true, then a cycle has been found
+		if slices.ContainsFunc(children, visit) {
+			return true
+		}
+
+		visited[node] = false
+		return false
+	}
+
+	return visit(pkg)
 }
