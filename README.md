@@ -77,6 +77,14 @@ be expensive in terms of both memory and CPU usage. It is generally
 inappropriate for this kind of write-heavy, low-latency scenario this server
 requires.
 
+### Summary Table
+
+| **Pattern**                      | **Simplicity** | **Idiomatic** | **Scalability** | **Downsides**                             |
+| -------------------------------- | :------------: | :-----------: | :-------------: | ----------------------------------------- |
+| Goroutine-per-Connection + Mutex |      High      |      Yes      |      High       | Requires careful synchronization          |
+| Dedicated State Goroutine        |     Medium     |      Yes      |     Medium      | Centralized bottleneck + added complexity |
+| Copy-on-Write Immutable State    |      Low       |      No       |   Medium-High   | High overhead + complex                   |
+
 ### → Chosen Design Architecture
 
 The final implementation uses the Goroutine-per-Connection with Mutex-Protected
