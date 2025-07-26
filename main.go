@@ -5,6 +5,7 @@ import (
 	"net"
 
 	"example.com/generic-package-indexer/internal/connhandler"
+	"example.com/generic-package-indexer/internal/indexer"
 )
 
 func main() {
@@ -15,6 +16,8 @@ func main() {
 	}
 	log.Printf("Listening on %s", addr)
 
+	idx := indexer.New()
+
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
@@ -22,6 +25,6 @@ func main() {
 			continue
 		}
 
-		go connhandler.HandleConnection(conn)
+		go connhandler.HandleConnection(conn, idx)
 	}
 }
