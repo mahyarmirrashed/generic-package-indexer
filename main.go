@@ -12,11 +12,12 @@ import (
 )
 
 func main() {
-	addr := ":8080"
-
+	port := flag.String("port", "8080", "TCP port to listen on")
 	verbosity := flag.String("verbosity", "error", "Log verbosity level: debug, info, warn, error")
 	detectCycles := flag.Bool("detect-cycles", false, "Detect dependency cycles in the indexer")
 	flag.Parse()
+
+	addr := ":" + *port
 
 	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: parseLogLevel(*verbosity)})
 	logger := slog.New(handler)
