@@ -1,5 +1,8 @@
 # Generic Package Indexer
 
+Simple, generic package indexer with optional ability to check for dependency
+cycles.
+
 ## Usage
 
 To run the package indexer, run these following commands:
