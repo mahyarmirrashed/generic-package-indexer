@@ -19,7 +19,7 @@ const (
 func HandleConnection(conn net.Conn, idx *indexer.Indexer) {
 	defer conn.Close()
 
-	remoteAddr := conn.RemoteAddr()
+	remoteAddr := conn.RemoteAddr().String()
 	scanner := bufio.NewScanner(conn)
 
 	for scanner.Scan() {
