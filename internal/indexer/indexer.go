@@ -17,6 +17,14 @@ func New() *Indexer {
 	}
 }
 
+func (idx *Indexer) Count() int {
+	// Acquire lock
+	idx.mu.RLock()
+	defer idx.mu.RUnlock()
+
+	return len(idx.indexedPackages)
+}
+
 func (idx *Indexer) Index(pkg string, deps []string) bool {
 	// Acquire lock
 	idx.mu.Lock()
