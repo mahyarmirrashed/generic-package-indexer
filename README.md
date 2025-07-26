@@ -1,5 +1,14 @@
 # Generic Package Indexer
 
+## Usage
+
+To run the package indexer, run these following commands:
+
+```sh
+docker build -t generic-package-indexer -f Containerfile .
+docker run -p 8080:8080 -d generic-package-indexer
+```
+
 ## Server Design Architecture
 
 The package indexer (server) is required to handle multiple simultaneous client connections, each performing package index operations; possibly in parallel. In designing this project, I considered these three architectural patterns.
