@@ -115,3 +115,11 @@ was not missing any edge cases. It correctly identified that my package indexer
 was not checking for cyclic dependencies when indexing a new package. This could
 create a deadlock where those packages could then never subsequently be removed.
 I then asked it to generate the relevant `hasCycle` method and associated tests.
+
+### Connection Handler
+
+After writing out the test cases for the package indexer and the command parser,
+I was pretty tired. Out of laziness, I gave Perplexity's models my connection
+handler code and asked it to generate the tests. Honestly, I wasn't really sure
+how to fake the I/O connections, so that probably played a substantial part in
+that decision.
