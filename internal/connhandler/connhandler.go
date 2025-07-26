@@ -3,7 +3,7 @@ package connhandler
 import (
 	"bufio"
 	"fmt"
-	"log"
+	"log/slog"
 	"net"
 
 	"example.com/generic-package-indexer/internal/indexer"
@@ -16,7 +16,19 @@ const (
 	CommandResponseError = "ERROR\n"
 )
 
-func HandleConnection(conn net.Conn, idx *indexer.Indexer) {
+type Server struct {
+	idx    *indexer.Indexer
+	logger *slog.Logger
+}
+
+func NewServer(idx *indexer.Indexer, logger *slog.Logger) *Server {
+	return &Server{
+		idx:    idx,
+		logger: logger,
+	}
+}
+
+func (s *Server) HandleConnection(conn net.Conn) {
 	defer conn.Close()
 
 	remoteAddr := conn.RemoteAddr().String()
@@ -24,68 +36,71 @@ func HandleConnection(conn net.Conn, idx *indexer.Indexer) {
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		log.Printf("[client %s] Received: %s", remoteAddr, line)
+		s.logger.Info("Received", "client", remoteAddr, "line", line)
 
 		req, err := parser.Parse(line)
 		if err != nil {
-			log.Printf("[client %s] Failed to parse message: %v", remoteAddr, err)
-			if err := send(conn, CommandResponseError); err != nil {
+			s.logger.Warn("Failed to parse message", "client", remoteAddr, "error", err)
+			if err := s.send(conn, CommandResponseError, remoteAddr); err != nil {
 				return // Send failure, close connection
 			}
 			continue // Keep processing next lines
 		}
 
-		// Log parsed message for now...
-		log.Printf("[client %s] Parsed message: %s %s %s", remoteAddr, req.Command, req.Package, req.Dependencies)
+		s.logger.Debug("Parsed message",
+			"client", remoteAddr,
+			"command", req.Command,
+			"package", req.Package,
+			"dependencies", req.Dependencies,
+		)
 
 		var resp string
 		switch req.Command {
 		case parser.CommandIndex:
-			if idx.Index(req.Package, req.Dependencies) {
+			if s.idx.Index(req.Package, req.Dependencies) {
 				resp = CommandResponseOk
-				log.Printf("[client %s] INDEX succeeded for package %q with dependencies %v", remoteAddr, req.Package, req.Dependencies)
+				s.logger.Info("INDEX succeeded", "client", remoteAddr, "package", req.Package, "dependencies", req.Dependencies)
 			} else {
 				resp = CommandResponseFail
-				log.Printf("[client %s] INDEX failed for package %q due to missing dependencies %v", remoteAddr, req.Package, req.Dependencies)
+				s.logger.Info("INDEX failed due to missing dependencies", "client", remoteAddr, "package", req.Package, "dependencies", req.Dependencies)
 			}
 		case parser.CommandRemove:
-			if idx.Remove(req.Package) {
+			if s.idx.Remove(req.Package) {
 				resp = CommandResponseOk
-				log.Printf("[client %s] REMOVE succeeded for package %q", remoteAddr, req.Package)
+				s.logger.Info("REMOVE succeeded", "client", remoteAddr, "package", req.Package)
 			} else {
 				resp = CommandResponseFail
-				log.Printf("[client %s] REMOVE failed for package %q because other packages depend on it", remoteAddr, req.Package)
+				s.logger.Info("REMOVE failed due to dependent packages", "client", remoteAddr, "package", req.Package)
 			}
 		case parser.CommandQuery:
-			if idx.Query(req.Package) {
+			if s.idx.Query(req.Package) {
 				resp = CommandResponseOk
-				log.Printf("[client %s] QUERY found package %q", remoteAddr, req.Package)
+				s.logger.Info("QUERY found package", "client", remoteAddr, "package", req.Package)
 			} else {
 				resp = CommandResponseFail
-				log.Printf("[client %s] QUERY did not find package %q", remoteAddr, req.Package)
+				s.logger.Info("QUERY did not find package", "client", remoteAddr, "package", req.Package)
 			}
 		default:
-			resp = CommandResponseError // Unknown command (should not happen)
-			log.Printf("[client %s] Received unknown command %q", remoteAddr, req.Command)
+			resp = CommandResponseError
+			s.logger.Warn("Unknown command", "client", remoteAddr, "command", req.Command)
 		}
 
-		// Show how many packages have been indexed...
-		log.Printf("[server] %d packages indexed", idx.Count())
+		s.logger.Info("Indexed packages count", "count", s.idx.Count())
 
-		if err := send(conn, resp); err != nil {
-			return // Send failure, close connection
+		if err := s.send(conn, resp, remoteAddr); err != nil {
+			return
 		}
 	}
 
 	if err := scanner.Err(); err != nil {
-		log.Printf("[client %s] Connection error: %v", remoteAddr, err)
+		s.logger.Warn("Connection error", "client", remoteAddr, "error", err)
 	}
 }
 
-func send(conn net.Conn, msg string) error {
+func (s *Server) send(conn net.Conn, msg string, remoteAddr string) error {
 	_, err := fmt.Fprint(conn, msg)
 	if err != nil {
-		log.Printf("[client %s] Failed to send response: %v", conn.RemoteAddr(), err)
+		s.logger.Warn("Failed to send response", "client", remoteAddr, "error", err)
 	}
 	return err
 }

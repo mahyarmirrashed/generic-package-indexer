@@ -1,8 +1,9 @@
 package main
 
 import (
-	"log"
+	"log/slog"
 	"net"
+	"os"
 
 	"example.com/generic-package-indexer/internal/connhandler"
 	"example.com/generic-package-indexer/internal/indexer"
@@ -10,21 +11,27 @@ import (
 
 func main() {
 	addr := ":8080"
+
+	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelError})
+	logger := slog.New(handler)
+
 	ln, err := net.Listen("tcp", addr)
 	if err != nil {
-		log.Fatalf("[server] Failed to listen on %s: %v", addr, err)
+		logger.Error("Failed to listen", "addr", addr, "error", err)
+		os.Exit(1)
 	}
-	log.Printf("[server] Listening on %s", addr)
+	logger.Info("Listening on", "addr", addr)
 
 	idx := indexer.New()
+	srv := connhandler.NewServer(idx, logger)
 
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
-			log.Printf("[server] Failed to accept connection: %v", err)
+			logger.Warn("Failed to accept connection", "error", err)
 			continue
 		}
 
-		go connhandler.HandleConnection(conn, idx)
+		go srv.HandleConnection(conn)
 	}
 }
