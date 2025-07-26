@@ -12,6 +12,8 @@ docker build -t generic-package-indexer -f Containerfile .
 docker run -p 8080:8080 -d generic-package-indexer
 ```
 
+Run with the `-h` flag to see available flags.
+
 ## Testing
 
 To run tests, initialize your environment (a `flake.nix` is provided), then run
