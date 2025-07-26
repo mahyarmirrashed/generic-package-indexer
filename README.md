@@ -201,3 +201,9 @@ I was pretty tired. Out of laziness, I gave Perplexity's models my connection
 handler code and asked it to generate the tests. Honestly, I wasn't really sure
 how to fake the I/O connections, so that probably played a substantial part in
 that decision.
+
+### Containerfile
+
+I used Perplexity's LLMs to generate the basic scaffolding of the Containerfile.
+However, the parts with the SHA256 hashes (to increase security) to have a
+non-root user, were my ideas.
