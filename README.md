@@ -12,6 +12,15 @@ docker build -t generic-package-indexer -f Containerfile .
 docker run -p 8080:8080 -d generic-package-indexer
 ```
 
+## Testing
+
+To run tests, initialize your environment (a `flake.nix` is provided), then run
+the following command:
+
+```sh
+go test -v ./...
+```
+
 ## Server Design Architecture
 
 The package indexer (server) is required to handle multiple simultaneous client
