@@ -21,6 +21,11 @@ the following command:
 go test -v ./...
 ```
 
+The tests include unit tests for the command parser and the package indexer, and
+an integration test for the connection handler.
+
+For concurrency testing, I used the provided `do-package-tree_*` binary.
+
 ## Design Discussions
 
 ### Server Design Architecture Discussion
